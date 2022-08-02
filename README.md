@@ -260,3 +260,101 @@ print.bind();
 ```
 
 Uma subclasse não pode quebrar as expectativas definidas no contrato da superclasse. E claramente no projeto este principio está sendo quebrado.
+
+## I - Interface Segregation Principle
+
+Este princípio é bem importante para poder satisfazer os outros principios pois reforça a ideia de programar orientado a contratos. Para o `SRP` ele induz a decomposição de classe. Para o `OCP`, induz a derivação de interfaces. Para o `LSP`força repensar a hierarquia de classes/interfaces.
+
+Para aplicar esse princípio nesse projeto, vamos criar uma nova classe abstrata chamada `AbstractLinkShareButton` que terá o atual método `createLink`. E remodelaremos a classe abstrata `AbstractShareButton` removendo o método `createLink` e criando o novo método abstrato `createAction`. Uma ação será uma função que pode ser tanto abrir um link como imprimir a página. Também removemos a propriedade `url` da classe `AbstractShareButton`.
+
+A partir disso podemos refatorar as classes do Twitter, Facebook e LinkedIn para extender essa nova classe abstrata.
+
+E a classe Print, podemos implementar o método `createAction` e remover a `url` do constructor, já que não é mais necessário.
+
+No `index.ts`, apenas não informamos mais a url para o botão `print`.
+
+`AbstractShareButton.ts`
+```ts
+import EventHandler from "./EventHandler";
+
+export default abstract class AbstractShareButton {
+  clazz: string;
+  eventHandler: EventHandler;
+
+  constructor(clazz: string) {
+    this.clazz = clazz;
+    this.eventHandler = new EventHandler();
+  }
+
+  abstract createAction(): string;
+
+  bind() {
+    let action: any = this.createAction();
+    this.eventHandler.addEventListenerToClass(this.clazz, "click", action);
+  }
+}
+```
+
+`AbstractLinkShareButton.ts`
+```ts
+import AbstractShareButton from "./AbstractShareButton";
+
+export default abstract class AbstractLinkShareButton extends AbstractShareButton {
+  url: string;
+
+  constructor(clazz: string, url: string) {
+    super(clazz);
+    this.url = url;
+  }
+
+  abstract createLink(): string;
+
+  createAction(): any {
+    const link = this.createLink();
+    return () => window.open(link);
+  }
+
+}
+```
+
+`ShareButtonPrint.ts`
+```ts
+import AbstractShareButton from "./AbstractShareButton";
+
+export default class ShareButtonPrint extends AbstractShareButton {
+  constructor(clazz: string) {
+    super(clazz);
+  }
+
+  createAction(): any {
+    return () => window.print();
+  }
+}
+```
+
+`ShareButton[Twitter, Facebook, LinkedIn].ts`
+```ts
+import AbstractLinkShareButton from "./AbstractLinkShareButton";
+
+export default class ShareButton* extends AbstractLinkShareButton {
+```
+
+`index.ts`
+```ts
+import AbstractShareButton from './AbstractShareButton';
+import ShareButtonTwitter from './ShareButtonTwitter';
+import ShareButtonFacebook from './ShareButtonFacebook';
+import ShareButtonLinkedIn from './ShareButtonLinkedIn';
+import ShareButtonPrint from './ShareButtonPrint';
+
+const twitter: AbstractShareButton = new ShareButtonTwitter('.btn-twitter', "https://www.youtube.com/rodrigobranas");
+twitter.bind();
+const facebook: AbstractShareButton = new ShareButtonFacebook('.btn-facebook', "https://www.youtube.com/rodrigobranas");
+facebook.bind();
+const linkedIn: AbstractShareButton = new ShareButtonLinkedIn('.btn-linkedin', "https://www.youtube.com/rodrigobranas");
+linkedIn.bind();
+const print: AbstractShareButton = new ShareButtonPrint('.btn-print');
+print.bind();
+```
+
+Com isso também resolvemos o problema inserido para demonstrar o problema do `LSP`.

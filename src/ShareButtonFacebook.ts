@@ -1,6 +1,6 @@
-import AbstractShareButton from "./AbstractShareButton";
+import AbstractLinkShareButton from "./AbstractLinkShareButton";
 
-export default class ShareButtonFacebook extends AbstractShareButton {
+export default class ShareButtonFacebook extends AbstractLinkShareButton {
   constructor(clazz: string, url: string) {
     super(clazz, url);
   }
