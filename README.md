@@ -65,3 +65,50 @@ Vamos refletir e enumerar alguns problemas:
 - A classe depende de um objeto concreto (DOM) e não de uma abstração
 
 Então temos motivos para fazer alterações. E isso nos leva a refatorações.
+
+## S - Single Responsability Principle
+
+Para aplicar parte do conceito `S` do `SOLID`, vamos refatorar o desenvolvimento, criando uma nova classe `EventHandler` que será responsável por associar o evento de `click` a um botão.
+
+`EventHandler.ts`
+```ts
+export default class EventHandler {
+  addEventListenerToClass(clazz: string, event: string, fn: any) {
+    const elements: any = document.querySelectorAll(clazz);
+    for (const element of elements) {
+      element.addEventListener(event, fn);
+    }
+  }
+}
+```
+
+`ShareButton.ts`
+```ts
+import EventHandler from "./EventHandler";
+
+export default class ShareButton {
+  url: string;
+  eventHandler: EventHandler;
+
+  constructor(url: string) {
+    this.url = url;
+    this.eventHandler = new EventHandler();
+  }
+
+  bind(clazz: string, socialNetwork: string) {
+    let link: string;
+    if (socialNetwork === "twitter") {
+      link = `https://twitter.com/share?url=${this.url}`;
+    }
+    if (socialNetwork === "facebook") {
+      link = `http://www.facebook.com/sharer.php?u=${this.url}`;
+    }
+    if (socialNetwork === "linkedin") {
+      link = `http://www.linkedin.com/shareArticle?url=${this.url}`;
+    }
+    this.eventHandler.addEventListenerToClass(clazz, "click", () => window.open(link));
+  }
+}
+```
+
+Dessa forma reduzimos aprimoramos a ideia de responsabilidade única, embora não seja completa e a refatoração ainda fira outros princípios. Mas agora temos um classe com uma única responsabilidade de adicionar um `listener` de evento por classe.
