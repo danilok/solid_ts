@@ -112,3 +112,102 @@ export default class ShareButton {
 ```
 
 Dessa forma reduzimos aprimoramos a ideia de responsabilidade única, embora não seja completa e a refatoração ainda fira outros princípios. Mas agora temos um classe com uma única responsabilidade de adicionar um `listener` de evento por classe.
+
+Vamos continuar o estudo agora pensando no segundo princípio.
+
+## O - Open-Closed Principle
+
+Este princípio diz que uma classe deve estar aberto para extensão mas fechado para modificações. Um indício que uma classe está aberta para modificações é quando temos muitos `ifs` com diferentes estados no código. Isso gera um código com grau de manutenção maior, pois o que funciona não gerará problemas novos.
+
+Neste projeto, vamos criar uma classe abstrata de `ShareButton` que terá um método para criar link que deve ser implementado por qualquer classe que a estenda, isso deixará a classe fechada para modificações por conta de novas redes sociais.
+
+Além disso criaremos 3 classes que extenderão a class `AbstractShareButton`, uma para cada rede social. Cada classe deverá implementar o método `createLink`.
+
+Claro que isso impactará no nosso arquivo `index.ts`, vamos criar uma instância de cada uma das classes novas.
+
+`AbstractShareButton.ts`
+```ts
+import EventHandler from "./EventHandler";
+
+export default abstract class AbstractShareButton {
+  url: string;
+  clazz: string;
+  eventHandler: EventHandler;
+
+  constructor(clazz: string, url: string) {
+    this.url = url;
+    this.clazz = clazz;
+    this.eventHandler = new EventHandler();
+  }
+
+  abstract createLink(): string;
+
+  bind() {
+    let link: string = this.createLink();
+    this.eventHandler.addEventListenerToClass(this.clazz, "click", () => window.open(link));
+  }
+}
+```
+
+`ShareButtonTwitter.ts`
+```ts
+import AbstractShareButton from "./AbstractShareButton";
+
+export default class ShareButtonTwitter extends AbstractShareButton {
+  constructor(clazz: string, url: string) {
+    super(clazz, url);
+  }
+
+  createLink(): string {
+    return `https://twitter.com/share?url=${this.url}`;
+  }
+}
+```
+
+`ShareButtonFacebook.ts`
+```ts
+import AbstractShareButton from "./AbstractShareButton";
+
+export default class ShareButtonFacebook extends AbstractShareButton {
+  constructor(clazz: string, url: string) {
+    super(clazz, url);
+  }
+
+  createLink(): string {
+    return `http://www.facebook.com/sharer.php?u=${this.url}`;
+  }
+}
+```
+
+`ShareButtonLinkedIn.ts`
+```ts
+import AbstractShareButton from "./AbstractShareButton";
+
+export default class ShareButtonLinkedIn extends AbstractShareButton {
+  constructor(clazz: string, url: string) {
+    super(clazz, url);
+  }
+
+  createLink(): string {
+    return `http://www.linkedin.com/shareArticle?url=${this.url}`;
+  }
+}
+```
+
+`index.ts`
+```ts
+import ShareButtonTwitter from './ShareButtonTwitter';
+import ShareButtonFacebook from './ShareButtonFacebook';
+import ShareButtonLinkedIn from './ShareButtonLinkedIn';
+
+const twitter = new ShareButtonTwitter('.btn-twitter', "https://www.youtube.com/rodrigobranas");
+twitter.bind();
+const facebook = new ShareButtonFacebook('.btn-facebook', "https://www.youtube.com/rodrigobranas");
+facebook.bind();
+const linkedIn = new ShareButtonLinkedIn('.btn-linkedin', "https://www.youtube.com/rodrigobranas");
+linkedIn.bind();
+```
+
+Após essas modificações, caso precisemos adicionar novas redes sociais, pasta criar uma nova classe para ela, sem precisar alterar alguma existente com `ifs` a mais.
+
+Um paralelo para esse princípio são os plugins no VSCode, a gente não altera o código do editor mas podemos extendê-los instalando os plugins.
