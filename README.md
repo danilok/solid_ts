@@ -211,3 +211,52 @@ linkedIn.bind();
 Após essas modificações, caso precisemos adicionar novas redes sociais, pasta criar uma nova classe para ela, sem precisar alterar alguma existente com `ifs` a mais.
 
 Um paralelo para esse princípio são os plugins no VSCode, a gente não altera o código do editor mas podemos extendê-los instalando os plugins.
+
+## L - Liskov Substitution Principle
+
+Uma classe derivada deve ser substituível por sua classe base. Pensando no nosso projeto, caso criemos um botão `Print` e extender `AbstractShareButton`, a implementação do método `createLink` não fará muito sentido pois impressão não é compartilhável via link e isso quebra esse princípio. Pois uma subclasse quebra o comportamento esperado segundo o princípio de substituição de Liskov.
+Para este princípio, não vamos mostrar uma solução mas o problema.
+
+`index.html`
+```html
+  <body>
+    <button class="btn-twitter">Twitter</button>
+    <button class="btn-facebook">Facebook</button>
+    <button class="btn-linkedin">LinkedIn</button>
+    <button class="btn-print">Print</button>
+    <script type="module" src="/src/index.ts"></script>
+  </body>
+```
+`ShareButtonPrint.ts`
+```ts
+import AbstractShareButton from "./AbstractShareButton";
+
+export default class ShareButtonPrint extends AbstractShareButton {
+  constructor(clazz: string, url: string) {
+    super(clazz, url);
+  }
+
+  createLink(): string {
+    throw new Error('Unsupported Method Exception');
+  }
+}
+```
+
+`index.ts`
+```ts
+import ShareButtonTwitter from './ShareButtonTwitter';
+import ShareButtonFacebook from './ShareButtonFacebook';
+import ShareButtonLinkedIn from './ShareButtonLinkedIn';
+import ShareButtonPrint from './ShareButtonPrint';
+
+const twitter = new ShareButtonTwitter('.btn-twitter', "https://www.youtube.com/rodrigobranas");
+twitter.bind();
+const facebook = new ShareButtonFacebook('.btn-facebook', "https://www.youtube.com/rodrigobranas");
+facebook.bind();
+const linkedIn = new ShareButtonLinkedIn('.btn-linkedin', "https://www.youtube.com/rodrigobranas");
+linkedIn.bind();
+const print = new ShareButtonPrint('.btn-print', "https://www.youtube.com/rodrigobranas");
+print.bind();
+```
+
+Uma subclasse não pode quebrar as expectativas definidas no contrato da superclasse. E claramente no projeto este principio está sendo quebrado.
